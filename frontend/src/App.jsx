@@ -1,6 +1,7 @@
-import React from "react";
+import React, { useState } from "react";
 import DashboardLayout from "./components/DashboardLayout";
 import ExpenseForm from "./components/ExpenseForm";
+import ExpenseList from "./components/ExpenseList";
 
 import useExpenses from "./hooks/useExpenses";
 import calculateTotalExpenses from "./utils/calculateTotalExpenses";
@@ -28,43 +29,45 @@ export default function App() {
   const { expenses } = useExpenses();
   const total = calculateTotalExpenses(expenses);
 
+  // Increment 5: editing state is lifted to App so ExpenseForm + ExpenseList can coordinate
+  const [editingExpense, setEditingExpense] = useState(null);
+
   return (
     <DashboardLayout>
-      {/* Dashboard cards (now driven by real data for "Total Expenses") */}
+      {/* Dashboard cards */}
       <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
           title="Total Expenses"
           value={formatCurrency(total)}
           helper="All-time spending"
         />
-        <StatCard
-          title="Monthly Budget"
-          value="$500.00"
-          helper="Budget for this month (placeholder)"
-        />
+        <StatCard title="Monthly Budget" value="$500.00" helper="Placeholder" />
         <StatCard
           title="Remaining Balance"
           value="$214.50"
-          helper="Budget minus expenses (placeholder)"
+          helper="Placeholder"
         />
-        <StatCard
-          title="Top Category"
-          value="Food"
-          helper="Highest spend category (placeholder)"
-        />
+        <StatCard title="Top Category" value="Food" helper="Placeholder" />
       </section>
 
-      {/* Increment 4: Expense Form */}
+      {/* Expense Form (Add/Edit) */}
       <div className="mt-6">
-        <ExpenseForm />
+        <ExpenseForm
+          editingExpense={editingExpense}
+          onCancelEdit={() => setEditingExpense(null)}
+          onSaved={() => setEditingExpense(null)}
+        />
       </div>
 
-      {/* Keep Increment 3 testing UI */}
+      {/* Expense List */}
+      <ExpenseList onEdit={(expense) => setEditingExpense(expense)} />
+
+      {/* (Optional) keep your Increment 3 test UI if you still want it */}
+      {/* You can remove this block later */}
       <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
         <div className="text-sm font-semibold text-slate-900 dark:text-slate-50">
-          Increment 3: Expense State Test
+          Debug / Test
         </div>
-
         <div className="mt-2 text-sm text-slate-600 dark:text-slate-300">
           <div>
             <strong>Expense count:</strong> {expenses.length}
@@ -72,17 +75,6 @@ export default function App() {
           <div>
             <strong>Total expenses:</strong> {formatCurrency(total)}
           </div>
-        </div>
-
-        <div className="mt-4">
-          <div className="text-sm font-medium text-slate-800 dark:text-slate-200">
-            All expense titles
-          </div>
-          <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-slate-700 dark:text-slate-300">
-            {expenses.map((e) => (
-              <li key={e.id}>{e.title}</li>
-            ))}
-          </ul>
         </div>
       </section>
     </DashboardLayout>
