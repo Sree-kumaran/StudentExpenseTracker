@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import DashboardLayout from "./components/DashboardLayout";
 import DashboardSummary from "./components/DashboardSummary";
+import BudgetTracker from "./components/BudgetTracker";
 import ExpenseForm from "./components/ExpenseForm";
 import ExpenseList from "./components/ExpenseList";
 import AnalyticsSection from "./components/AnalyticsSection";
@@ -11,6 +12,8 @@ export default function App() {
   return (
     <DashboardLayout>
       <DashboardSummary />
+
+      <BudgetTracker />
 
       <div className="mt-6">
         <ExpenseForm

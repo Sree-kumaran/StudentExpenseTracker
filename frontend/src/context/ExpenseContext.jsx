@@ -3,48 +3,68 @@ import dummyExpenses from "../data/dummyExpenses";
 
 export const ExpenseContext = createContext(null);
 
-const STORAGE_KEY = "student-expense-tracker:expenses";
+const EXPENSES_KEY = "student-expense-tracker:expenses";
+const BUDGET_KEY = "student-expense-tracker:monthlyBudget";
+const DEFAULT_BUDGET = 20000;
 
-function loadExpenses() {
+// --- Helpers (localStorage) ---
+function safeParseJSON(raw) {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : null;
+    return JSON.parse(raw);
   } catch {
     return null;
   }
 }
 
-function saveExpenses(expenses) {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(expenses));
-  } catch {
-    // ignore storage errors for MVP
-  }
+function loadExpenses() {
+  const raw = localStorage.getItem(EXPENSES_KEY);
+  if (!raw) return null;
+
+  const parsed = safeParseJSON(raw);
+  return Array.isArray(parsed) ? parsed : null;
+}
+
+function loadBudget() {
+  const raw = localStorage.getItem(BUDGET_KEY);
+  if (!raw) return null;
+
+  const parsed = safeParseJSON(raw);
+  const budget = Number(parsed);
+
+  // Return null if invalid (so we fallback to default)
+  if (!Number.isFinite(budget) || budget <= 0) return null;
+  return budget;
 }
 
 export function ExpenseProvider({ children }) {
+  // Expenses (Increment 3)
   const [expenses, setExpenses] = useState(
     () => loadExpenses() ?? dummyExpenses,
   );
 
+  // Monthly Budget (Increment 8)
+  const [monthlyBudget, setMonthlyBudgetState] = useState(
+    () => loadBudget() ?? DEFAULT_BUDGET,
+  );
+
+  // Persist expenses whenever they change
   useEffect(() => {
-    saveExpenses(expenses);
+    localStorage.setItem(EXPENSES_KEY, JSON.stringify(expenses));
   }, [expenses]);
 
-  /**
-   * addExpense
-   * - Increment 4 passes { id: Date.now(), title, amount, category, date }
-   * - If an id isn't provided, we create one with Date.now()
-   */
+  // Persist monthly budget whenever it changes
+  useEffect(() => {
+    localStorage.setItem(BUDGET_KEY, JSON.stringify(monthlyBudget));
+  }, [monthlyBudget]);
+
+  // --- CRUD ---
   function addExpense(expenseInput) {
     const newExpense = {
       id: expenseInput.id ? String(expenseInput.id) : String(Date.now()),
       title: expenseInput.title,
       amount: Number(expenseInput.amount),
       category: expenseInput.category,
-      date: expenseInput.date,
+      date: expenseInput.date, // expected "YYYY-MM-DD"
     };
 
     setExpenses((prev) => [newExpense, ...prev]);
@@ -71,9 +91,28 @@ export function ExpenseProvider({ children }) {
     );
   }
 
+  /**
+   * setMonthlyBudget
+   * - Keep validation simple & beginner-friendly
+   * - Only allow positive numbers
+   */
+  function setMonthlyBudget(nextBudget) {
+    const budgetNumber = Number(nextBudget);
+    if (!Number.isFinite(budgetNumber) || budgetNumber <= 0) return;
+    setMonthlyBudgetState(budgetNumber);
+  }
+
   const value = useMemo(
-    () => ({ expenses, addExpense, deleteExpense, editExpense }),
-    [expenses],
+    () => ({
+      expenses,
+      addExpense,
+      deleteExpense,
+      editExpense,
+
+      monthlyBudget,
+      setMonthlyBudget,
+    }),
+    [expenses, monthlyBudget],
   );
 
   return (

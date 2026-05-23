@@ -8,13 +8,11 @@ import getTopCategory from "../utils/getTopCategory";
 import formatCurrency from "../utils/formatCurrency";
 
 /**
- * DashboardSummary (Increment 6)
- * Shows 4 dynamic cards derived from ExpenseContext data.
+ * DashboardSummary (Increment 8 update)
+ * - Uses monthlyBudget from context (dynamic)
  */
 export default function DashboardSummary() {
-  const { expenses } = useExpenses();
-
-  const MONTHLY_BUDGET = 20000;
+  const { expenses, monthlyBudget } = useExpenses();
 
   const totalExpenses = useMemo(
     () => calculateTotalExpenses(expenses),
@@ -27,8 +25,8 @@ export default function DashboardSummary() {
   );
 
   const remainingBudget = useMemo(
-    () => calculateRemainingBudget(MONTHLY_BUDGET, monthlySpending),
-    [monthlySpending],
+    () => calculateRemainingBudget(monthlyBudget, monthlySpending),
+    [monthlyBudget, monthlySpending],
   );
 
   const topCategory = useMemo(() => getTopCategory(expenses), [expenses]);
@@ -103,7 +101,7 @@ export default function DashboardSummary() {
               📉 {formatCurrency(remainingBudget)}
             </div>
             <div className="mt-2 text-xs text-slate-500 dark:text-slate-400">
-              Budget: {formatCurrency(MONTHLY_BUDGET)} / month
+              Budget: {formatCurrency(monthlyBudget)} / month
             </div>
           </div>
 
