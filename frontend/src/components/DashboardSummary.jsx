@@ -6,45 +6,12 @@ import calculateMonthlyExpenses from "../utils/calculateMonthlyExpenses";
 import calculateRemainingBudget from "../utils/calculateRemainingBudget";
 import getTopCategory from "../utils/getTopCategory";
 import formatCurrency from "../utils/formatCurrency";
+import Card from "./ui/Card";
 
-/**
- * DashboardSummary (Increment 8 update)
- * - Uses monthlyBudget from context (dynamic)
- */
-export default function DashboardSummary() {
-  const { expenses, monthlyBudget } = useExpenses();
-
-  const totalExpenses = useMemo(
-    () => calculateTotalExpenses(expenses),
-    [expenses],
-  );
-
-  const monthlySpending = useMemo(
-    () => calculateMonthlyExpenses(expenses),
-    [expenses],
-  );
-
-  const remainingBudget = useMemo(
-    () => calculateRemainingBudget(monthlyBudget, monthlySpending),
-    [monthlyBudget, monthlySpending],
-  );
-
-  const topCategory = useMemo(() => getTopCategory(expenses), [expenses]);
-
-  const remainingTone =
-    remainingBudget >= 0
-      ? "border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-900/40 dark:bg-emerald-950/30 dark:text-emerald-200"
-      : "border-rose-200 bg-rose-50 text-rose-800 dark:border-rose-900/40 dark:bg-rose-950/30 dark:text-rose-200";
-
-  function Card({ icon, title, value, accentClass, subtext }) {
-    return (
-      <div
-        className={[
-          "rounded-2xl border bg-white p-5 shadow-sm transition hover:shadow-md",
-          "dark:border-slate-800 dark:bg-slate-950",
-          accentClass,
-        ].join(" ")}
-      >
+function SummaryCard({ icon, title, value, subtitle, accent }) {
+  return (
+    <Card className="overflow-hidden">
+      <div className="p-5">
         <div className="flex items-start justify-between gap-3">
           <div>
             <div className="text-sm font-medium text-slate-600 dark:text-slate-300">
@@ -53,74 +20,83 @@ export default function DashboardSummary() {
             <div className="mt-2 text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-50">
               {value}
             </div>
-            {subtext ? (
+            {subtitle ? (
               <div className="mt-2 text-xs text-slate-500 dark:text-slate-400">
-                {subtext}
+                {subtitle}
               </div>
             ) : null}
           </div>
 
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-lg dark:bg-slate-900">
-            <span aria-hidden="true">{icon}</span>
+            {icon}
           </div>
         </div>
       </div>
-    );
-  }
+
+      {/* accent bar */}
+      <div className={`h-1 w-full ${accent}`} />
+    </Card>
+  );
+}
+
+export default function DashboardSummary() {
+  const { expenses, monthlyBudget } = useExpenses();
+
+  const totalExpenses = useMemo(
+    () => calculateTotalExpenses(expenses),
+    [expenses],
+  );
+  const monthlySpending = useMemo(
+    () => calculateMonthlyExpenses(expenses),
+    [expenses],
+  );
+  const remaining = useMemo(
+    () => calculateRemainingBudget(monthlyBudget, monthlySpending),
+    [monthlyBudget, monthlySpending],
+  );
+  const topCategory = useMemo(() => getTopCategory(expenses), [expenses]);
+
+  const remainingLabel =
+    remaining >= 0
+      ? formatCurrency(remaining)
+      : `- ${formatCurrency(Math.abs(remaining))}`;
 
   return (
-    <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-      <Card
+    <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <SummaryCard
         icon="💰"
         title="Total Expenses"
         value={formatCurrency(totalExpenses)}
-        accentClass="border-slate-200"
-        subtext="All-time spending"
+        subtitle="All-time spending"
+        accent="bg-blue-600"
       />
 
-      <Card
+      <SummaryCard
         icon="📅"
         title="Monthly Spending"
         value={formatCurrency(monthlySpending)}
-        accentClass="border-indigo-200 dark:border-indigo-900/40"
-        subtext="Spending in current month"
+        subtitle="This month"
+        accent="bg-indigo-600"
       />
 
-      <div className="rounded-2xl border p-5 shadow-sm transition hover:shadow-md dark:border-slate-800 dark:bg-slate-950">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <div className="text-sm font-medium text-slate-600 dark:text-slate-300">
-              Remaining Budget
-            </div>
-            <div
-              className={[
-                "mt-2 inline-flex rounded-xl border px-3 py-1 text-xl font-semibold tracking-tight",
-                remainingTone,
-              ].join(" ")}
-            >
-              📉 {formatCurrency(remainingBudget)}
-            </div>
-            <div className="mt-2 text-xs text-slate-500 dark:text-slate-400">
-              Budget: {formatCurrency(monthlyBudget)} / month
-            </div>
-          </div>
+      <SummaryCard
+        icon="🎯"
+        title="Remaining Budget"
+        value={remainingLabel}
+        subtitle={`Budget: ${formatCurrency(monthlyBudget)} / month`}
+        accent={remaining >= 0 ? "bg-emerald-600" : "bg-rose-600"}
+      />
 
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-lg dark:bg-slate-900">
-            <span aria-hidden="true">🎯</span>
-          </div>
-        </div>
-      </div>
-
-      <Card
+      <SummaryCard
         icon="🔥"
-        title="Top Spending Category"
+        title="Top Category"
         value={topCategory.category}
-        accentClass="border-amber-200 dark:border-amber-900/40"
-        subtext={
+        subtitle={
           topCategory.category === "—"
             ? "No expenses yet"
             : `Spent: ${formatCurrency(topCategory.total)}`
         }
+        accent="bg-amber-500"
       />
     </section>
   );

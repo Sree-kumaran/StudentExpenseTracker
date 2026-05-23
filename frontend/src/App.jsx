@@ -1,4 +1,6 @@
 import React, { useState } from "react";
+import { ThemeProvider } from "./context/ThemeContext";
+
 import DashboardLayout from "./components/DashboardLayout";
 import DashboardSummary from "./components/DashboardSummary";
 import BudgetTracker from "./components/BudgetTracker";
@@ -10,22 +12,21 @@ export default function App() {
   const [editingExpense, setEditingExpense] = useState(null);
 
   return (
-    <DashboardLayout>
-      <DashboardSummary />
+    <ThemeProvider>
+      <DashboardLayout>
+        <DashboardSummary />
+        <BudgetTracker />
 
-      <BudgetTracker />
-
-      <div className="mt-6">
         <ExpenseForm
           editingExpense={editingExpense}
           onCancelEdit={() => setEditingExpense(null)}
           onSaved={() => setEditingExpense(null)}
         />
-      </div>
 
-      <ExpenseList onEdit={(expense) => setEditingExpense(expense)} />
+        <ExpenseList onEdit={(expense) => setEditingExpense(expense)} />
 
-      <AnalyticsSection />
-    </DashboardLayout>
+        <AnalyticsSection />
+      </DashboardLayout>
+    </ThemeProvider>
   );
 }

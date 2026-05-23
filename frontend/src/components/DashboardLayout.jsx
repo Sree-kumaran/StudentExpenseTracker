@@ -4,39 +4,28 @@ import Sidebar from "./Sidebar";
 
 /**
  * DashboardLayout
- * - Wraps the whole app shell (Navbar + Sidebar + main content)
- * - Manages mobile sidebar open/close + active menu state
- * - Accepts children to render inside the main content area
+ * - Manages mobile sidebar open/close
+ * - Manages active nav item highlight (no routing yet)
  */
 export default function DashboardLayout({ children }) {
-  const [activeKey, setActiveKey] = useState("dashboard");
-  const [mobileOpen, setMobileOpen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [activeItem, setActiveItem] = useState("Dashboard");
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-50">
-      <Navbar onMenuClick={() => setMobileOpen(true)} />
+    <div className="min-h-screen bg-slate-50 text-slate-900 transition-colors duration-200 dark:bg-slate-900 dark:text-slate-50">
+      <Navbar onMenuClick={() => setIsSidebarOpen(true)} />
 
-      {/* Body: sidebar + content */}
       <div className="mx-auto flex max-w-7xl">
         <Sidebar
-          activeKey={activeKey}
-          onChange={setActiveKey}
-          mobileOpen={mobileOpen}
-          onClose={() => setMobileOpen(false)}
+          isOpen={isSidebarOpen}
+          onClose={() => setIsSidebarOpen(false)}
+          activeItem={activeItem}
+          onSelect={(key) => setActiveItem(key)}
         />
 
-        <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8">
-          {/* Optional page header (kept minimal) */}
-          <div className="mb-6">
-            <div className="text-xs font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400">
-              {activeKey}
-            </div>
-            <div className="mt-1 text-2xl font-semibold tracking-tight">
-              Dashboard
-            </div>
-          </div>
-
-          {children}
+        <main className="w-full p-4 sm:p-6">
+          {/* Page container */}
+          <div className="space-y-6">{children}</div>
         </main>
       </div>
     </div>
