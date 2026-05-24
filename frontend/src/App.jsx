@@ -7,6 +7,8 @@ import BudgetTracker from "./components/BudgetTracker";
 import ExpenseForm from "./components/ExpenseForm";
 import ExpenseList from "./components/ExpenseList";
 import AnalyticsSection from "./components/AnalyticsSection";
+import ExportSection from "./components/ExportSection";
+import Footer from "./components/Footer";
 
 export default function App() {
   const [editingExpense, setEditingExpense] = useState(null);
@@ -26,6 +28,10 @@ export default function App() {
         <ExpenseList onEdit={(expense) => setEditingExpense(expense)} />
 
         <AnalyticsSection />
+
+        <ExportSection />
+
+        <Footer />
       </DashboardLayout>
     </ThemeProvider>
   );

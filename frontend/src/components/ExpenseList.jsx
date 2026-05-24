@@ -2,6 +2,7 @@ import React, { useMemo, useState } from "react";
 import useExpenses from "../hooks/useExpenses";
 import categories from "../data/categories";
 import formatCurrency from "../utils/formatCurrency";
+
 import Card from "./ui/Card";
 import Button from "./ui/Button";
 import SectionTitle from "./ui/SectionTitle";
@@ -9,6 +10,10 @@ import SectionTitle from "./ui/SectionTitle";
 export default function ExpenseList({ onEdit }) {
   const { expenses, deleteExpense } = useExpenses();
 
+  // New: search input
+  const [search, setSearch] = useState("");
+
+  // Existing: filter + sort
   const [filterCategory, setFilterCategory] = useState("All");
   const [sortBy, setSortBy] = useState("date_desc");
 
@@ -19,12 +24,24 @@ export default function ExpenseList({ onEdit }) {
   }
 
   const visibleExpenses = useMemo(() => {
-    let list = [...expenses];
+    let list = Array.isArray(expenses) ? [...expenses] : [];
 
+    // Search by title
+    const q = search.trim().toLowerCase();
+    if (q) {
+      list = list.filter((e) =>
+        String(e?.title || "")
+          .toLowerCase()
+          .includes(q),
+      );
+    }
+
+    // Filter by category
     if (filterCategory !== "All") {
       list = list.filter((e) => e.category === filterCategory);
     }
 
+    // Sort
     switch (sortBy) {
       case "date_asc":
         list.sort((a, b) => String(a.date).localeCompare(String(b.date)));
@@ -48,26 +65,43 @@ export default function ExpenseList({ onEdit }) {
     }
 
     return list;
-  }, [expenses, filterCategory, sortBy]);
+  }, [expenses, search, filterCategory, sortBy]);
+
+  const hasExpenses = Array.isArray(expenses) && expenses.length > 0;
 
   return (
     <Card>
       <div className="p-5">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
           <SectionTitle
             title="Expenses"
             subtitle={`${visibleExpenses.length} shown / ${expenses.length} total`}
           />
 
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-slate-600 dark:text-slate-300">
-                Filter
-              </span>
+          {/* Controls */}
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+            {/* Search */}
+            <div className="sm:col-span-1">
+              <label className="text-xs font-semibold text-slate-600 dark:text-slate-300">
+                Search
+              </label>
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search by title..."
+                className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:focus:border-blue-400 dark:focus:ring-blue-900/30"
+              />
+            </div>
+
+            {/* Filter */}
+            <div>
+              <label className="text-xs font-semibold text-slate-600 dark:text-slate-300">
+                Category
+              </label>
               <select
                 value={filterCategory}
                 onChange={(e) => setFilterCategory(e.target.value)}
-                className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:focus:border-blue-400 dark:focus:ring-blue-900/30"
+                className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:focus:border-blue-400 dark:focus:ring-blue-900/30"
               >
                 <option value="All">All</option>
                 {categories.map((c) => (
@@ -78,14 +112,15 @@ export default function ExpenseList({ onEdit }) {
               </select>
             </div>
 
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-slate-600 dark:text-slate-300">
+            {/* Sort */}
+            <div>
+              <label className="text-xs font-semibold text-slate-600 dark:text-slate-300">
                 Sort
-              </span>
+              </label>
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
-                className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:focus:border-blue-400 dark:focus:ring-blue-900/30"
+                className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-50 dark:focus:border-blue-400 dark:focus:ring-blue-900/30"
               >
                 <option value="date_desc">Date: Newest</option>
                 <option value="date_asc">Date: Oldest</option>
@@ -97,14 +132,25 @@ export default function ExpenseList({ onEdit }) {
           </div>
         </div>
 
-        {visibleExpenses.length === 0 ? (
+        {/* Empty states */}
+        {!hasExpenses ? (
           <div className="mt-4 rounded-2xl border border-dashed border-slate-200 p-8 text-center dark:border-slate-800">
-            <div className="text-3xl">🗂️</div>
+            <div className="text-3xl">🧾</div>
             <div className="mt-2 text-sm font-semibold text-slate-900 dark:text-slate-50">
-              No expenses found
+              No expenses added yet.
             </div>
             <div className="mt-1 text-sm text-slate-600 dark:text-slate-300">
-              Add a new expense to see it here.
+              Add your first expense to start tracking.
+            </div>
+          </div>
+        ) : visibleExpenses.length === 0 ? (
+          <div className="mt-4 rounded-2xl border border-dashed border-slate-200 p-8 text-center dark:border-slate-800">
+            <div className="text-3xl">🔎</div>
+            <div className="mt-2 text-sm font-semibold text-slate-900 dark:text-slate-50">
+              No results found.
+            </div>
+            <div className="mt-1 text-sm text-slate-600 dark:text-slate-300">
+              Try clearing search/filter to see more expenses.
             </div>
           </div>
         ) : (

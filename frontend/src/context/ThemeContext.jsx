@@ -4,26 +4,27 @@ export const ThemeContext = createContext(null);
 
 const STORAGE_KEY = "student-expense-tracker:theme";
 
-/**
- * ThemeProvider
- * - Stores theme ("light" | "dark")
- * - Persists in localStorage
- * - Applies Tailwind "dark" mode using a class on <html>
- */
+function applyThemeToHtml(theme) {
+  const root = document.documentElement;
+
+  if (theme === "dark") root.classList.add("dark");
+  else root.classList.remove("dark");
+
+  // Helps native form controls match theme
+  root.style.colorScheme = theme;
+}
+
 export function ThemeProvider({ children }) {
   const [theme, setTheme] = useState(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
-    return saved === "dark" || saved === "light" ? saved : "light";
+    if (saved === "dark" || saved === "light") return saved;
+    return "light";
   });
 
   useEffect(() => {
+    // Apply immediately whenever theme changes
+    applyThemeToHtml(theme);
     localStorage.setItem(STORAGE_KEY, theme);
-
-    // Tailwind dark mode via class strategy:
-    // When <html class="dark"> exists => dark: utilities activate
-    const root = document.documentElement;
-    if (theme === "dark") root.classList.add("dark");
-    else root.classList.remove("dark");
   }, [theme]);
 
   function toggleTheme() {
