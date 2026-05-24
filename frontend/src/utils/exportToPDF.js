@@ -1,8 +1,9 @@
 import jsPDF from "jspdf";
-import "jspdf-autotable";
+import autoTable from "jspdf-autotable";
 
 /**
- * Export expenses to a professional-looking PDF using jsPDF + autoTable.
+ * Export expenses to a professional-looking PDF.
+ * Uses jsPDF + jspdf-autotable (function call style for Vite reliability).
  */
 export default function exportToPDF(
   expenses,
@@ -14,7 +15,6 @@ export default function exportToPDF(
   const safe = Array.isArray(expenses) ? expenses : [];
 
   const doc = new jsPDF();
-
   const now = new Date();
   const dateStr = now.toLocaleDateString();
 
@@ -29,7 +29,7 @@ export default function exportToPDF(
   doc.text(`Report Date: ${dateStr}`, 14, 22);
   doc.text(`Total Expenses: ${total.toFixed(2)}`, 14, 27);
 
-  // Table
+  // Table data
   const head = [["Title", "Amount", "Category", "Date"]];
   const body = safe.map((e) => [
     String(e?.title ?? ""),
@@ -38,15 +38,16 @@ export default function exportToPDF(
     String(e?.date ?? ""),
   ]);
 
-  doc.autoTable({
+  // IMPORTANT: call autoTable(doc, ...)
+  autoTable(doc, {
     head,
     body,
     startY: 34,
     theme: "striped",
     styles: { fontSize: 10, cellPadding: 3 },
-    headStyles: { fillColor: [15, 23, 42] }, // slate-900-ish
+    headStyles: { fillColor: [15, 23, 42] },
     columnStyles: {
-      1: { halign: "right" }, // amount right aligned
+      1: { halign: "right" }, // Amount right aligned
     },
   });
 

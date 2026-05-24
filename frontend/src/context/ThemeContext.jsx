@@ -4,26 +4,25 @@ export const ThemeContext = createContext(null);
 
 const STORAGE_KEY = "student-expense-tracker:theme";
 
-function applyThemeToHtml(theme) {
-  const root = document.documentElement;
+function applyTheme(theme) {
+  const root = document.documentElement; // <html>
 
+  // Ensure a clean state every time
+  root.classList.remove("dark");
   if (theme === "dark") root.classList.add("dark");
-  else root.classList.remove("dark");
 
-  // Helps native form controls match theme
+  // Helps native controls match (optional, but nice)
   root.style.colorScheme = theme;
 }
 
 export function ThemeProvider({ children }) {
   const [theme, setTheme] = useState(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved === "dark" || saved === "light") return saved;
-    return "light";
+    return saved === "dark" || saved === "light" ? saved : "light";
   });
 
   useEffect(() => {
-    // Apply immediately whenever theme changes
-    applyThemeToHtml(theme);
+    applyTheme(theme);
     localStorage.setItem(STORAGE_KEY, theme);
   }, [theme]);
 
