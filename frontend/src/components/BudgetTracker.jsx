@@ -13,6 +13,7 @@ import formatCurrency from "../utils/formatCurrency";
  * - Saving monthly budget calls context setMonthlyBudget (PUT /api/settings)
  * - Saving daily limit calls context setDailyLimit (PUT /api/settings)
  * - Progress bar "Budget used" uses DAILY limit (todaySpending vs dailyLimit)
+ * - Daily limit progress resets at local midnight via a timer (midnightTick)
  */
 export default function BudgetTracker() {
   const {
@@ -30,6 +31,9 @@ export default function BudgetTracker() {
   const [budgetInput, setBudgetInput] = useState(String(monthlyBudget));
   const [dailyLimitInput, setDailyLimitInput] = useState(String(dailyLimit));
 
+  // Used only to trigger recompute at midnight if app stays open
+  const [midnightTick, setMidnightTick] = useState(0);
+
   // Keep inputs in sync when context loads settings from backend
   useEffect(() => {
     setBudgetInput(String(monthlyBudget));
@@ -38,6 +42,22 @@ export default function BudgetTracker() {
   useEffect(() => {
     setDailyLimitInput(String(dailyLimit));
   }, [dailyLimit]);
+
+  // Schedule a refresh at the next local midnight to reset "today spent" UI
+  useEffect(() => {
+    function msUntilNextMidnight() {
+      const now = new Date();
+      const next = new Date(now);
+      next.setHours(24, 0, 0, 0); // next local midnight
+      return next.getTime() - now.getTime();
+    }
+
+    const timeout = window.setTimeout(() => {
+      setMidnightTick((n) => n + 1);
+    }, msUntilNextMidnight() + 50); // small buffer
+
+    return () => window.clearTimeout(timeout);
+  }, [midnightTick]);
 
   const monthlySpending = useMemo(
     () => calculateMonthlyExpenses(expenses),
@@ -54,9 +74,10 @@ export default function BudgetTracker() {
     [monthlyBudget, monthlySpending],
   );
 
+  // IMPORTANT: midnightTick included so it resets at 12:00 AM even if no new expenses were added
   const todaySpending = useMemo(
     () => calculateDailyExpenses(expenses),
-    [expenses],
+    [expenses, midnightTick],
   );
 
   // Daily usage percent (progress bar is based on dailyLimit)
