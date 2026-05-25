@@ -1,6 +1,4 @@
 import React, { useState } from "react";
-import { ThemeProvider } from "./context/ThemeContext";
-
 import DashboardLayout from "./components/DashboardLayout";
 import DashboardSummary from "./components/DashboardSummary";
 import BudgetTracker from "./components/BudgetTracker";
@@ -14,7 +12,6 @@ export default function App() {
   const [editingExpense, setEditingExpense] = useState(null);
 
   return (
-    <ThemeProvider>
       <DashboardLayout>
         <DashboardSummary />
         <BudgetTracker />
@@ -33,6 +30,5 @@ export default function App() {
 
         <Footer />
       </DashboardLayout>
-    </ThemeProvider>
   );
 }
